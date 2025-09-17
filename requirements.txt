@@ -1,0 +1,16 @@
+# FastAPI et ses dépendances
+fastapi==0.115.14
+uvicorn==0.27.1
+python-multipart==0.0.9
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+pydantic[email]==2.11.7
+email-validator==2.2.0
+
+# Base de données (MySQL via mysql-connector)
+sqlalchemy==2.0.41
+mysql-connector-python==9.3.0
+
+# Sécurité et utilitaires
+bcrypt==4.0.1
+python-dotenv==1.0.0
