@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+Include/
+Lib/
+Scripts/
+pyvenv.cfg
+
+# Logs
+*.log
+
+# Exception pour les fichiers à inclure
+!.env
+!database.py
+!main.py
+!src/
+!src/*
+!requirements.txt

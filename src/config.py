@@ -1,15 +1,21 @@
+from typing import Optional
 from pydantic_settings import BaseSettings
+import os
 
 class Settings(BaseSettings):
     """
-    Paramètres de configuration pour l'application, chargés à partir d'un fichier .env.
+    Paramètres de configuration pour l'application.
+    Ces paramètres sont chargés depuis les variables d'environnement
+    ou le fichier .env
     """
-    SECRET_KEY: str  # La clé secrète pour signer les JWT.
-    ALGORITHM: str  # L'algorithme à utiliser pour signer les JWT (par exemple, HS256).
-    ACCESS_TOKEN_EXPIRE_MINUTES: int  # La durée de vie des jetons d'accès en minutes.
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
 
     class Config:
-        env_file = ".env"
+        env_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
         env_file_encoding = 'utf-8'
+        case_sensitive = True
 
-settings = Settings(_env_file='c:\\Users\\DELL\\Desktop\\api-fast\\env\\.env')
+# Instance des paramètres
+settings = Settings()
