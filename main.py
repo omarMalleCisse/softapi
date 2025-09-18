@@ -15,6 +15,10 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from src.models import User
+from fastapi import FastAPI
+from datetime import datetime, timedelta
+from jose import jwt
+from src.config import settings  # ton fichier pydantic_settings
 
 
 
@@ -63,6 +67,16 @@ class user_renspons(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+app = FastAPI()
+
+@app.get("/token-test")
+def token_test():
+    expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    payload = {"sub": "testuser", "exp": expire}
+    token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return {"access_token": token, "token_type": "bearer"}
 
    
 @app.get("/users/")
