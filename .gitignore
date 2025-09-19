@@ -25,3 +25,4 @@ pyvenv.cfg
 !src/
 !src/*
 !requirements.txt
+!Procfile
