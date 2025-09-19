@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 # Remplacez les valeurs ci-dessous par vos informations MySQL
-DATABASE_URL = "mysql+mysqlconnector://testProject:Touba123@localhost:3306/softwaar"
+DATABASE_URL = "mysql+aiomysql://testProject:Touba123@containers-us-west-123.railway.app:3306/softwaar"
 
 
 
