@@ -1,10 +1,33 @@
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker
+import os
+from urllib.parse import quote_plus
 
-# Remplacez les valeurs ci-dessous par vos informations MySQL
-DATABASE_URL = "mysql+aiomysql://testProject:Touba123@containers-us-west-123.railway.app:3306/softwaar"
+# Configuration de la base de données avec les variables Railway
+DB_HOST = os.getenv("MYSQLHOST", "localhost")
+DB_USER = os.getenv("MYSQLUSER", "root")
+DB_PASSWORD = os.getenv("MYSQLPASSWORD", "root")
+DB_NAME = os.getenv("MYSQLDATABASE", "softwaar")
+DB_PORT = os.getenv("MYSQLPORT", "3306")
 
+# Construction de l'URL sécurisée pour MySQL
+DATABASE_URL = f"mysql+pymysql://{DB_USER}:{quote_plus(DB_PASSWORD)}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
+# Créer le moteur avec des paramètres optimisés pour Railway
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,              # Vérifie la connexion avant utilisation
+    pool_recycle=300,                # Recycle les connexions après 5 minutes
+    pool_size=10,                    # Taille du pool de connexions augmentée
+    max_overflow=20,                 # Plus de connexions supplémentaires autorisées
+    connect_args={
+        "connect_timeout": 30        # Timeout de connexion réduit pour Railway
+    }
+)
+
+# Configuration de la session et de la base
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
 def get_db():
     db = SessionLocal()
@@ -12,9 +35,6 @@ def get_db():
         yield db
     finally:
         db.close()
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
 # Exemple de modèle
 def create_tables():
     Base.metadata.create_all(bind=engine)
@@ -34,7 +54,7 @@ class Features(Base):
     text = Column(String(255), unique=True, index=True)
 
 class BulletPoints(Base):
-    __tablename__ = " bulletPoints"
+    __tablename__ = "bullet_points"
     id = Column(Integer, primary_key=True, index=True)
     alt = Column(String(255), index=True)
     image = Column(String(255), unique=True, index=True)
@@ -55,7 +75,7 @@ class Social(Base):
 class Register(Base):
     __tablename__ = "registers"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False)  # Suppression de la clé étrangère
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     info = Column(String(255))
     email = Column(String(255), index=True)
     telephone = Column(String(50), index=True)
