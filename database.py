@@ -3,38 +3,37 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 import os
 from urllib.parse import quote_plus
 
-# Configuration de la base de données avec les variables Railway
-DB_HOST = os.getenv("MYSQLHOST", "localhost")
-DB_USER = os.getenv("MYSQLUSER", "root")
-DB_PASSWORD = os.getenv("MYSQLPASSWORD", "root")
-DB_NAME = os.getenv("MYSQLDATABASE", "softwaar")
-DB_PORT = os.getenv("MYSQLPORT", "3306")
+# src/database.py
 
-# Construction de l'URL sécurisée pour MySQL
-DATABASE_URL = f"mysql+pymysql://{DB_USER}:{quote_plus(DB_PASSWORD)}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-# Créer le moteur avec des paramètres optimisés pour Railway
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,              # Vérifie la connexion avant utilisation
-    pool_recycle=300,                # Recycle les connexions après 5 minutes
-    pool_size=10,                    # Taille du pool de connexions augmentée
-    max_overflow=20,                 # Plus de connexions supplémentaires autorisées
-    connect_args={
-        "connect_timeout": 30        # Timeout de connexion réduit pour Railway
-    }
-)
+# Récupère l'URL de la base depuis Railway
+raw_url = os.getenv("DATABASE_URL")
+if not raw_url:
+    raise RuntimeError("La variable d'environnement DATABASE_URL n'est pas définie")
 
-# Configuration de la session et de la base
+# Correction du préfixe pour SQLAlchemy + PyMySQL
+DATABASE_URL = raw_url.replace("mysql://", "mysql+pymysql://", 1)
+
+# Crée l’engine SQLAlchemy
+engine = create_engine(DATABASE_URL)
+
+# Crée une session locale pour les transactions
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Base pour définir les modèles ORM
 Base = declarative_base()
 
+# Dépendance FastAPI pour injecter la session DB
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
 # Exemple de modèle
 def create_tables():
     Base.metadata.create_all(bind=engine)
