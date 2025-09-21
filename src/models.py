@@ -1,14 +1,9 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String
 from database import Base
-from database import SessionLocal
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# La fonction get_db() est maintenant dans database.py
 
 
 class User(Base):

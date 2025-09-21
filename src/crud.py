@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
-from src import schemas, models
+from database import SessionLocal
+from src import models, schemas
 from src.security import get_password_hash
 
 

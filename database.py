@@ -4,35 +4,75 @@ import os
 from urllib.parse import quote_plus
 
 # src/database.py
-
 import os
+from pathlib import Path
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from typing import Generator
 
-# Récupère l'URL de la base depuis Railway
+# Charge les variables d'environnement depuis .env
+env_path = Path(__file__).parent / '.env'
+load_dotenv(dotenv_path=env_path)
+
+# Récupère l'URL de la base depuis Railway ou .env
 raw_url = os.getenv("DATABASE_URL")
 if not raw_url:
-    raise RuntimeError("La variable d'environnement DATABASE_URL n'est pas définie")
+    raise ValueError(
+        "La variable d'environnement DATABASE_URL n'est pas définie. "
+        "Vérifiez votre fichier .env ou vos variables Railway."
+    )
 
 # Correction du préfixe pour SQLAlchemy + PyMySQL
-DATABASE_URL = raw_url.replace("mysql://", "mysql+pymysql://", 1)
+# Vérifie si l'URL commence par mysql:// et la transforme si nécessaire
+DATABASE_URL = raw_url.replace("mysql://", "mysql+pymysql://", 1) if raw_url.startswith("mysql://") else raw_url
 
-# Crée l’engine SQLAlchemy
-engine = create_engine(DATABASE_URL)
+# Configuration de l'engine SQLAlchemy avec des paramètres optimisés
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,              # Vérifie la connexion avant utilisation
+    pool_recycle=300,                # Recycle les connexions après 5 minutes
+    pool_size=10,                    # Taille optimale pour Railway
+    max_overflow=20,                 # Connexions supplémentaires autorisées
+    pool_timeout=30,                 # Timeout du pool de connexions
+    connect_args={
+        "connect_timeout": 60        # Timeout de connexion MySQL
+    }
+)
 
-# Crée une session locale pour les transactions
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Configuration de la session SQLAlchemy
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+    expire_on_commit=False           # Évite les problèmes de lazy loading
+)
 
-# Base pour définir les modèles ORM
+# Base déclarative pour les modèles ORM
 Base = declarative_base()
 
-# Dépendance FastAPI pour injecter la session DB
-def get_db():
+def get_db() -> Generator:
+    """
+    Dépendance FastAPI pour injecter la session de base de données.
+    Assure la fermeture correcte de la session après chaque requête.
+    
+    Yields:
+        Session: Une session SQLAlchemy active
+    """
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+# Test de connexion si exécuté directement
+if __name__ == "__main__":
+    try:
+        with engine.connect() as conn:
+            print("✅ Connexion à la base de données réussie!")
+    except Exception as e:
+        print(f"❌ Erreur de connexion : {str(e)}")
+
 
 # Exemple de modèle
 def create_tables():

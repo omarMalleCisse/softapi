@@ -8,6 +8,7 @@ from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
+from database import SessionLocal, Base
 from src import crud, models, schemas
 from src.security import create_access_token, verify_password, get_current_user, get_current_active_admin
 from src.config import settings
@@ -26,8 +27,13 @@ from src.config import settings  # ton fichier pydantic_settings
 import os
 import uuid
 
-app = FastAPI()
+app = FastAPI(title="SoftWaar API")
 router = APIRouter()
+
+# Création des tables au démarrage
+from database import engine
+import src.models as models
+models.Base.metadata.create_all(bind=engine)
 
 UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
@@ -105,15 +111,27 @@ def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2Passw
     return {"access_token": access_token, "token_type": "bearer"}
 
     
-@router.post("/users/", response_model=schemas.User)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+@router.post("/users/", response_model=schemas.UserResponse)
+async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """
     Crée un nouvel utilisateur.
     """
-    db_user = crud.get_user_by_email(db, email=user.email)
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    return crud.create_user(db=db, user=user)
+    try:
+        # Vérifier si l'email existe déjà
+        db_user = crud.get_user_by_email(db, email=user.email)
+        if db_user:
+            raise HTTPException(
+                status_code=400,
+                detail="Cet email est déjà enregistré"
+            )
+        
+        # Créer le nouvel utilisateur
+        return crud.create_user(db=db, user=user)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Une erreur s'est produite lors de la création de l'utilisateur: {str(e)}"
+        )
 
 
 
