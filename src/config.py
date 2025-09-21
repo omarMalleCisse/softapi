@@ -11,11 +11,14 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
+    DATABASE_URL: str  # <-- Ajouté pour Pydantic
 
     class Config:
         env_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
         env_file_encoding = 'utf-8'
         case_sensitive = True
+        extra = "ignore"  # <-- Ignore les variables supplémentaires dans .env ou Railway
 
 # Instance des paramètres
 settings = Settings()
+
