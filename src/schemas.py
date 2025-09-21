@@ -1,6 +1,19 @@
 from pydantic import BaseModel
 from typing import Optional
 
+
+
+class UserResponse(BaseModel):
+    """Schéma pour la réponse après création d'un utilisateur."""
+    id: int
+    email: str
+    role: str
+    name: str
+    adresse: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
 class UserCreate(BaseModel):
     """Schéma pour la création d'un nouvel utilisateur."""
     email: str
