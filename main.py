@@ -607,11 +607,18 @@ app.include_router(router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En production, spécifiez vos domaines
+    allow_origins=[
+        "https://sofwaar-w3l1-git-softwaar-omarmallecisses-projects.vercel.app"
+    ],  # Autorise uniquement ton frontend Vercel
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Endpoint racine pour vérifier que l'API est en ligne
+@app.get("/")
+def root():
+    return {"message": "API en ligne 🚀"}
 
 if __name__ == "__main__":
     import uvicorn
